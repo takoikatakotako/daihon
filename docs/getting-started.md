@@ -6,37 +6,31 @@
 
 | もの | 用途 | 入れ方 |
 |---|---|---|
-| daihon | 本体 | 下を参照 |
+| Go 1.25 以降 | daihon のビルド | `brew install go` または <https://go.dev/dl/> |
 | ffmpeg | 動画の書き出し | `brew install ffmpeg` |
 | VOICEVOX ENGINE | 音声合成 | 下を参照 |
 
 ### daihon
 
-[Releases](https://github.com/takoikatakotako/daihon/releases/latest) に各 OS 向けのバイナリがあります。
-
-| OS | ファイル |
-|---|---|
-| macOS（Apple Silicon） | `daihon_darwin_arm64.tar.gz` |
-| macOS（Intel） | `daihon_darwin_amd64.tar.gz` |
-| Linux | `daihon_linux_amd64.tar.gz` / `daihon_linux_arm64.tar.gz` |
-| Windows | `daihon_windows_amd64.zip` |
+リポジトリをクローンして、ソースからビルドします。
 
 ```bash
-curl -L https://github.com/takoikatakotako/daihon/releases/latest/download/daihon_darwin_arm64.tar.gz | tar xz
-sudo mv daihon /usr/local/bin/
+git clone git@github.com:takoikatakotako/daihon.git
+cd daihon
+go install ./cmd/daihon
 daihon version
 ```
 
-macOS でブラウザからダウンロードした場合は、署名が無いため初回起動がブロックされます。
-`xattr -d com.apple.quarantine daihon` で解除してください（`curl` で取得した場合は不要です）。
-
-Go 1.25 以降があれば、`go install` でも入ります。
+`go install` は `$(go env GOBIN)`（未設定なら `$(go env GOPATH)/bin`）にインストールします。
+そこに PATH が通っていなければ追加してください。
 
 ```bash
-go install github.com/takoikatakotako/daihon/cmd/daihon@latest
+echo 'export PATH="$(go env GOPATH)/bin:$PATH"' >> ~/.zshrc
 ```
 
-ソースからビルドする場合は、クローンしたディレクトリで `go install ./cmd/daihon` を実行します。
+インストールせずに使うなら、`go build -o daihon ./cmd/daihon` でカレントディレクトリにバイナリができます。
+
+更新するときは `git pull` してから、もう一度 `go install ./cmd/daihon` を実行します。
 
 ### VOICEVOX ENGINE
 

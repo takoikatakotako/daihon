@@ -14,8 +14,9 @@ import (
 // version is set by the release build (-ldflags "-X main.version=v0.1.0").
 var version = ""
 
-// buildVersion falls back to the module version recorded by `go install
-// ...@v0.1.0`, and to "dev" for a plain `go build` from a checkout.
+// buildVersion falls back to the version the Go toolchain recorded: the tag for
+// `go install ...@v0.1.0`, or a pseudo-version naming the commit when built from
+// a git checkout. "dev" is left for builds with no VCS information at all.
 func buildVersion() string {
 	if version != "" {
 		return version

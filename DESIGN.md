@@ -810,9 +810,12 @@ CRF を上げても縮みが鈍くなるのは、音声が占める割合が大�
 
 `go install` だけだと、使う人に Go を入れてもらう必要がある。daihon は cgo を使わない
 単一バイナリなので、GoReleaser で各 OS 向けにクロスビルドして GitHub Releases に置く。
-`v*` タグの push で `.github/workflows/release.yml` が走る。バージョンは
-`-X main.version` で埋め込み、`go install ...@v0.1.0` で入れた場合はモジュールの
-バージョンを、手元の `go build` では `dev` を表示する。
+`v*` タグの push で `.github/workflows/release.yml` が走る。
+ただしリポジトリが非公開のあいだは、ドキュメント上の導入手順はクローンして
+`go install ./cmd/daihon` とし、Releases には触れない。公開したら手順を差し替える。バージョンは
+`-X main.version` で埋め込む。埋め込みが無いときは Go が記録したバージョンを使う。
+`go install ...@v0.1.0` ならそのタグ、クローンしたソースからのビルドなら
+`v0.0.0-20261009035158-76746fb73b3a` のようにコミットを含む疑似バージョンになる。
 
 Docker イメージ（ffmpeg・日本語フォント・VOICEVOX 込み）も検討したが、後回しにした。
 処理の大半は Go でのフレーム合成で CPU を食うため、Docker Desktop の VM 越しでは遅く、

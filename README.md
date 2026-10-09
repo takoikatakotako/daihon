@@ -31,16 +31,16 @@ scenes:
 - **差分ビルド** — 音声は行ごとにキャッシュされます。1行直しても合成し直すのはその行だけです。
 - **素材ゼロでも動く** — 立ち絵や画像が無ければプレースホルダで描くので、構成から先に作れます。
 - **キャラクター非依存** — 本体は特定のキャラクターを持ちません。立ち絵と声は台本側のデータです。
-- **単一バイナリ** — 外部依存は ffmpeg と音声エンジンだけ。ブラウザや Node は要りません。
+- **単一バイナリ** — 動かすのに必要なのは ffmpeg と音声エンジンだけ。ブラウザや Node は要りません。
 
 ## クイックスタート
 
-[Releases](https://github.com/takoikatakotako/daihon/releases/latest) からバイナリをダウンロードして、PATH の通った場所に置きます。
+ソースからビルドします。Go 1.25 以降が必要です。
 
 ```bash
-# macOS (Apple Silicon) の例。Intel Mac は darwin_amd64、Linux は linux_amd64 / linux_arm64
-curl -L https://github.com/takoikatakotako/daihon/releases/latest/download/daihon_darwin_arm64.tar.gz | tar xz
-sudo mv daihon /usr/local/bin/
+git clone git@github.com:takoikatakotako/daihon.git
+cd daihon
+go install ./cmd/daihon       # $(go env GOPATH)/bin に入る
 
 brew install ffmpeg
 docker compose up -d          # VOICEVOX ENGINE（またはアプリを起動しておく）
@@ -49,7 +49,6 @@ daihon init my-video && cd my-video
 daihon build                  # out/movie.mp4 ができる
 ```
 
-Go があれば `go install github.com/takoikatakotako/daihon/cmd/daihon@latest` でも入ります。
 詳しくは [はじめての動画](docs/getting-started.md) を参照してください。
 
 サンプルをビルドする場合:
