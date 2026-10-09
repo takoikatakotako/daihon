@@ -1,0 +1,28 @@
+/out/
+/.daihon-cache/
+/daihon
+
+# ビルド成果物とキャッシュ
+examples/*/out/
+examples/*/.daihon-cache/
+
+# 立ち絵・音声素材は配布条件が個別にあるため、リポジトリには入れない。
+# 「気をつける」ではなく ignore で構造的に防ぐ（DESIGN.md §1.2）。
+# ディレクトリ自体ではなく中身を除外する。ディレクトリを除外すると、
+# 中のファイルを "!" で復活させられない。
+examples/*/assets/*
+examples/*/assets/*/
+# 置き方の説明だけは公開する
+!examples/*/assets/README.md
+# introduction の素材は自作（ChatGPT で生成）なので同梱する
+!examples/introduction/assets/*/
+!examples/introduction/assets/*/*
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+
+# GoReleaser
+/dist/

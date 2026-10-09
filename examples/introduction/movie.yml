@@ -1,0 +1,105 @@
+version: 1
+
+meta:
+  title: "daihon の紹介"
+  output: out/introduction.mp4
+  credit: |
+    VOICEVOX:春日部つむぎ
+    VOICEVOX:ずんだもん
+
+imports:
+  - characters/cast.yml
+
+video:
+  width: 1920
+  height: 1080
+  fps: 30
+  # 背景は情報量が多いので、少し暗くぼかして人物と吹き出しを立たせる。
+  background: { src: assets/bg/bg_outside_buildings.jpg, dim: 0.15, blur: 3 }
+
+
+
+
+
+
+# リポジトリに同梱できるよう小さく書き出す。レイアウトは video の 1920x1080 で
+# 書いたまま、全体を 720p に縮めて出力する（約1.3MB）。
+export:
+  height: 720
+  crf: 28
+  audio_bitrate: 64k
+
+audio:
+  pause_between_lines_ms: 350
+  # BGM を足すときは assets/bgm/bgm.mp3 を置いてこのブロックを有効にする。
+  # bgm:
+  #   src: assets/bgm/bgm.mp3
+  #   volume: 0.10
+  #   fade_out_ms: 3000
+
+subtitle:
+  mode: bubble
+  size: 48
+  max_chars_per_line: 22
+
+scenes:
+  - id: intro
+    script:
+      - wait: 500
+      - kouhai: "先輩、解説動画を作ってって頼まれたんですけど……"
+        expr: shock
+      - show: assets/images/tv_video_hensyu_hard.png
+        as: hensyu
+        enter: fade
+      - kouhai: "動画編集なんてやったことないんです。"
+      - senpai: "それなら daihon を使ってみて。"
+        read: "それなら、ダイホンを使ってみて。"
+      - hide: hensyu
+      - wait: 300
+
+  - id: what-is-it
+    script:
+      - show: assets/images/computer_screen_programming.png
+        as: code
+        enter: fade
+      - senpai: "daihon は、テキストで書いた台本から動画を作るツールなの。"
+        read: "ダイホンは、テキストで書いた台本から動画を作るツールなの。"
+        expr: idea
+      - kouhai: "台本を書くだけでいいんですか？"
+        expr: surprise
+      - senpai: "うん。セリフを書いて build を実行すると、mp4 ができあがるよ。"
+        read: "うん。セリフを書いてビルドを実行すると、エムピーフォーができあがるよ。"
+        expr: smile
+      - hide: code
+
+  - id: timing
+    script:
+      - show: assets/images/stopwatch.png
+        as: watch
+        enter: fade
+      - kouhai: "でも、声と字幕のタイミングを合わせるのが大変そうです。"
+        expr: question
+      - senpai: "そこがポイント。先に音声を作って、その長さで尺を決めるの。"
+        expr: idea
+      - kouhai: "じゃあ、秒数はひとつも書かなくていいんですね！"
+        expr: idea
+      - hide: watch
+      - senpai: "直した行だけ作り直すから、ビルドも速いよ。"
+        expr: smile
+
+  - id: features
+    script:
+      - senpai: "表情の切り替えも、画像を出すのも、台本に一行書くだけ。"
+      - kouhai: "あ、さっきの画像もそうやって出してたんですね。"
+        expr: surprise
+      - senpai: "台本はただのテキストだから、git で差分も見られるよ。"
+        expr: idea
+
+  - id: outro
+    script:
+      - kouhai: "なんだか、僕にもできそうな気がしてきました！"
+        expr: smile
+      - senpai: "まずは daihon init で雛形を作ってみよう。"
+        read: "まずは、ダイホン、イニットで雛形を作ってみよう。"
+        expr: smile
+      - wait: 800

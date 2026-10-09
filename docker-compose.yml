@@ -1,0 +1,19 @@
+# VOICEVOX ENGINE をローカルに立てる。
+#
+#   docker compose up -d
+#
+# daihon は「50021 で待ち受けているもの」に喋りかけるだけなので、Docker でも
+# ネイティブ版でも同じように動く。ネイティブ版を置いている場合、daihon は
+# 必要になった時点で自動起動する（DESIGN.md §5.3）。
+services:
+  voicevox:
+    # Apple Silicon 以外では cpu-latest（x86_64）に差し替える。
+    image: voicevox/voicevox_engine:cpu-arm64-latest
+    ports:
+      - "127.0.0.1:50021:50021"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:50021/version"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped

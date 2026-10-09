@@ -1,0 +1,41 @@
+# GoReleaser の設定。タグを push すると .github/workflows/release.yml から実行され、
+# 各 OS 向けのバイナリを GitHub Releases に置く。
+# 手元で試す:  goreleaser release --snapshot --clean
+version: 2
+
+project_name: daihon
+
+builds:
+  - main: ./cmd/daihon
+    binary: daihon
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin, linux, windows]
+    goarch: [amd64, arm64]
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Tag }}
+
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"

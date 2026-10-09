@@ -1,0 +1,41 @@
+# 立ち絵のパスはこのファイル（characters/）からの相対で書ける。
+#
+# 画像は ChatGPT で生成したもの（プロンプトは ../PROMPTS.md）。
+#
+# 口パク用の差分は作っていないので lipsync は書かない。
+# 書かなければ口パクなしで、表情の切り替えだけになる。
+characters:
+  senpai:
+    name: "先輩"
+    voice:
+      engine: voicevox
+      speaker_id: 8          # 春日部つむぎ（ノーマル）
+      speed: 1.1
+    stand:
+      position: right
+      scale: 0.72
+    expressions:
+      smile: ../assets/senpai/smile.png
+      idea:  ../assets/senpai/idea.png
+    default_expression: smile
+    bubble:
+      color: "#c0507a"
+
+  kouhai:
+    name: "後輩"
+    voice:
+      engine: voicevox
+      speaker_id: 3          # ずんだもん（ノーマル）
+      speed: 1.1
+    stand:
+      position: left
+      scale: 0.72
+    expressions:
+      smile:    ../assets/kouhai/smile.png
+      idea:     ../assets/kouhai/idea.png
+      shock:    ../assets/kouhai/shock.png
+      surprise: ../assets/kouhai/surprise.png
+      question: ../assets/kouhai/question.png
+    default_expression: smile
+    bubble:
+      color: "#3f6fb5"
