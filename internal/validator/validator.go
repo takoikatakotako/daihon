@@ -108,6 +108,18 @@ func checkCharacters(p *parser.Project) []Diag {
 	}
 	for _, id := range sortedKeys(p.Movie.Characters) {
 		c := p.Movie.Characters[id]
+		switch c.Voice.Engine {
+		case "voicevox", "say", "estimate":
+		case "gemini":
+			if c.Voice.Model != "" && c.Voice.Model != "gemini-3.8-flash-tts" && c.Voice.Model != "gemini-3.8-flash-lite-tts" {
+				ds = append(ds, Diag{Severity: Error, Message: fmt.Sprintf("%s.voice.model: 未対応の Gemini TTS モデル %q です", id, c.Voice.Model)})
+			}
+			if c.Voice.Speed != 1 || c.Voice.Pitch != 0 {
+				ds = append(ds, Diag{Severity: Error, Message: fmt.Sprintf("%s.voice: Gemini TTS は speed/pitch に対応していません。style で指定してください", id)})
+			}
+		default:
+			ds = append(ds, Diag{Severity: Error, Message: fmt.Sprintf("%s.voice.engine: 未知の音声エンジン %q です", id, c.Voice.Engine)})
+		}
 		if schema.IsReserved(id) {
 			ds = append(ds, Diag{Severity: Error, Message: fmt.Sprintf("キャラクター ID %q は予約語です", id)})
 		}
@@ -230,6 +242,10 @@ func checkLine(p *parser.Project, sc schema.Scene, it schema.ScriptItem) []Diag 
 	if it.Read != "" && it.Read == it.Text {
 		ds = append(ds, Diag{Severity: Warn, Line: it.Line, Scene: sc.ID,
 			Message: "read が text と同一です。不要なら削除してください"})
+	}
+	if c.Voice.Engine == "gemini" && it.Speed != nil && *it.Speed != 1 {
+		ds = append(ds, Diag{Severity: Error, Line: it.Line, Scene: sc.ID,
+			Message: "Gemini TTS は speed に対応していません。style で指定してください"})
 	}
 	if it.Expr != "" && len(c.Expressions) > 0 {
 		if _, ok := c.Expressions[it.Expr]; !ok {

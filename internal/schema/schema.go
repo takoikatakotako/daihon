@@ -117,6 +117,9 @@ type Voice struct {
 	VoiceName string  `yaml:"voice_name"`
 	Speed     float64 `yaml:"speed"`
 	Pitch     float64 `yaml:"pitch"`
+	Model     string  `yaml:"model"`
+	Language  string  `yaml:"language"`
+	Style     string  `yaml:"style"`
 }
 
 type Stand struct {

@@ -61,6 +61,13 @@ func TestFirstKeyDecidesKind(t *testing.T) {
 	}
 }
 
+func TestReadAndStyleRemainSeparate(t *testing.T) {
+	items := parseItems(t, "- rikako: \"クロマトグラフィー。\"\n  read: \"ペーパークロマトグラフィー。\"\n  style: \"明るく\"\n")
+	if len(items) != 1 || items[0].Text != "クロマトグラフィー。" || items[0].Read != "ペーパークロマトグラフィー。" || items[0].Style != "明るく" {
+		t.Fatalf("line fields: %+v", items)
+	}
+}
+
 // `wait` is both a directive and a modifier. Which one it is depends solely on
 // whether it is the first key, so the two readings must not blur together.
 func TestWaitIsDirectiveOnlyWhenFirst(t *testing.T) {

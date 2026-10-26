@@ -11,6 +11,9 @@ type Options struct {
 	VoiceName string
 	Speed     float64
 	Pitch     float64
+	Model     string
+	Language  string
+	Style     string
 }
 
 // Engine synthesises speech.

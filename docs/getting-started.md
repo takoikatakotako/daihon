@@ -49,6 +49,9 @@ macOS では内蔵の `say` も使えます。`movie.yml` のキャラクター�
 `voice: { engine: say, voice_name: Kyoko }` を指定すれば、VOICEVOX ENGINE を起動せずに音声付きでビルドできます。
 `say` の出力を WAV に変換するため、ffmpeg は必要です。
 
+Vertex AI の Gemini TTS も使えます。ADC でログインし、`GOOGLE_CLOUD_PROJECT` を設定してから
+キャラクターの `voice.engine: gemini` を指定します。[モデル・声・言語・スタイルの設定例](./characters.md#声)を参照してください。
+
 状態は `daihon doctor` で確認できます。
 
 ```

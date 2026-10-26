@@ -63,6 +63,7 @@ type ScriptItem struct {
 	Expr  string
 	Wait  *int
 	Speed *float64
+	Style string
 
 	// KindShow
 	Src   string
@@ -85,7 +86,7 @@ type ScriptItem struct {
 
 // modifiers are keys allowed to follow the head key of an item.
 var modifiers = map[string]bool{
-	"expr": true, "wait": true, "speed": true, "read": true,
+	"expr": true, "wait": true, "speed": true, "read": true, "style": true,
 	"as": true, "at": true, "enter": true,
 }
 
@@ -138,6 +139,8 @@ func (s *ScriptItem) UnmarshalYAML(node *yaml.Node) error {
 			s.Expr = val.Value
 		case "read":
 			s.Read = val.Value
+		case "style":
+			s.Style = val.Value
 		case "as":
 			s.As = val.Value
 		case "at":
