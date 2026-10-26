@@ -2,7 +2,7 @@
 
 **台本を書くと、解説動画ができる。**
 
-`movie.yml` に会話を書いて `daihon build` を実行すると、VOICEVOX で音声を合成し、
+`movie.yml` に会話を書いて `daihon build` を実行すると、VOICEVOX または macOS の `say` で音声を合成し、
 立ち絵・字幕・画像を合わせた mp4 を書き出します。
 
 [![daihon の紹介動画](docs/images/introduction.jpg)](docs/introduction.mp4)
@@ -43,7 +43,7 @@ cd daihon
 go install ./cmd/daihon       # $(go env GOPATH)/bin に入る
 
 brew install ffmpeg
-docker compose up -d          # VOICEVOX ENGINE（またはアプリを起動しておく）
+docker compose up -d          # VOICEVOX ENGINE を使う場合
 
 daihon init my-video && cd my-video
 daihon build                  # out/movie.mp4 ができる
@@ -73,7 +73,7 @@ daihon build                  # out/introduction.mp4
 台本から mp4 までひと通り動きます。
 
 未実装: 立ち絵や画像のアニメーション、シーン間のトランジション、動画素材の埋め込み、
-ブラウザプレビュー、VOICEVOX 以外の音声エンジン（[DESIGN.md §9](DESIGN.md)）。
+ブラウザプレビュー、macOS `say` 以外の追加音声エンジン（[DESIGN.md §9](DESIGN.md)）。
 
 ## ライセンス
 

@@ -8,7 +8,7 @@ characters:
   senpai:
     name: "先輩"                # 吹き出しの上に出る名前
     voice:
-      engine: voicevox          # voicevox | estimate
+      engine: voicevox          # voicevox | say | estimate
       speaker_id: 8             # 話者 ID
       speed: 1.1                # 話す速さ（1.0 が標準）
       pitch: 0.0                # 声の高さ
@@ -33,6 +33,25 @@ characters:
 ## 声
 
 `speaker_id` は VOICEVOX の話者 ID です。エンジンが起動していれば一覧を取れます。
+
+macOS の内蔵音声を使う場合は `engine: say` と `voice_name` を指定します。
+`voice_name` を省略するとシステムの既定の声になります。利用できる声は `say -v '?'` で確認できます。
+`speed: 1.0` は 180 words/minute、`1.1` は約 198 words/minute です。
+`say` では `speaker_id` と `pitch` は使いません。動画の音声クレジットは、利用する声の条件に応じて `meta.credit` に記載してください。
+
+```yaml
+characters:
+  rikako:
+    name: "理科子"
+    voice:
+      engine: say
+      voice_name: Kyoko
+      speed: 1.08
+    stand:
+      position: right
+    expressions:
+      normal: ../assets/rikako-standing.png
+```
 
 ```bash
 curl -s localhost:50021/speakers | jq -r '.[] | .name as $n | .styles[] | "\(.id)\t\($n)（\(.name)）"'

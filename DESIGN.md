@@ -235,7 +235,8 @@ type Engine interface {
 }
 ```
 
-v1 で実装するのは `voicevox`（HTTP、`/audio_query` → `/synthesis`）のみ。
+初期版で実装したのは `voicevox`（HTTP、`/audio_query` → `/synthesis`）。
+その後、macOS の `say` をローカル音声エンジンとして追加した。
 `aivisspeech` / `coeiroink` は同じ API 形状なので設定だけで足りる見込み。
 クラウド TTS（Gemini / OpenAI）は将来の別実装。
 
@@ -511,7 +512,7 @@ my-video/
 - 動画素材の埋め込み
 - ブラウザプレビューサーバ
 - 複数話者の同時発話
-- VOICEVOX 以外の音声エンジン実装
+- `say` 以外の追加音声エンジン実装
 - 台本の自動生成（LLM 連携）
 
 ---

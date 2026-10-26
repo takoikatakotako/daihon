@@ -43,7 +43,7 @@ const usage = `daihon - movie.yml から解説動画をビルドする
 
 共通フラグ:
   -f <path>        movie.yml のパス (既定: movie.yml)
-  --engine <name>  音声エンジンを上書きする (voicevox | estimate)
+  --engine <name>  音声エンジンを上書きする (voicevox | say | estimate)
   --scene <id>     指定シーンだけを対象にする
   --no-autostart   VOICEVOX ENGINE を自動起動しない
 
@@ -107,7 +107,7 @@ type commonFlags struct {
 
 func (c *commonFlags) bind(fs *flag.FlagSet) {
 	fs.StringVar(&c.file, "f", "movie.yml", "movie.yml のパス")
-	fs.StringVar(&c.engine, "engine", "", "音声エンジンを上書きする (voicevox | estimate)")
+	fs.StringVar(&c.engine, "engine", "", "音声エンジンを上書きする (voicevox | say | estimate)")
 	fs.StringVar(&c.scene, "scene", "", "指定シーンだけを対象にする")
 	fs.BoolVar(&c.noAutostart, "no-autostart", false, "VOICEVOX ENGINE を自動起動しない")
 }

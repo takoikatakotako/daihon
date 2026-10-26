@@ -114,6 +114,7 @@ type Character struct {
 type Voice struct {
 	Engine    string  `yaml:"engine"`
 	SpeakerID int     `yaml:"speaker_id"`
+	VoiceName string  `yaml:"voice_name"`
 	Speed     float64 `yaml:"speed"`
 	Pitch     float64 `yaml:"pitch"`
 }
