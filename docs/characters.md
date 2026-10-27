@@ -8,7 +8,7 @@ characters:
   senpai:
     name: "先輩"                # 吹き出しの上に出る名前
     voice:
-      engine: voicevox          # voicevox | say | estimate
+      engine: voicevox          # voicevox | say | gemini | estimate
       speaker_id: 8             # 話者 ID
       speed: 1.1                # 話す速さ（1.0 が標準）
       pitch: 0.0                # 声の高さ
@@ -52,6 +52,38 @@ characters:
     expressions:
       normal: ../assets/rikako-standing.png
 ```
+
+Vertex AI の Gemini TTS を使う場合は `engine: gemini` を指定します。現行の Gemini 3.8 TTS は
+`gemini-3.8-flash-tts` と `gemini-3.8-flash-lite-tts` に対応します（前者が既定）。
+`voice_name` の既定は `Kore`、`language` は省略すると自動検出です。
+`style` は読み上げ方だけを指示し、セリフとして読み上げられません。行ごとの `style` で上書きできます。
+Gemini TTS では `speed` と `pitch` を使えないため、速さは `style` に書きます。
+
+```yaml
+characters:
+  rikako:
+    name: 理科子
+    voice:
+      engine: gemini
+      model: gemini-3.8-flash-tts
+      voice_name: Kore
+      language: ja-JP
+      style: 明るく、落ち着いた説明口調で
+    stand: { position: none }
+scenes:
+  - id: intro
+    script:
+      - rikako: "紙クロマトグラフィーを始めます。"
+        read: "ペーパークロマトグラフィーを始めます。"
+        style: はっきりと、少しゆっくり
+```
+
+認証には Application Default Credentials を使います。ローカルでは `gcloud auth application-default login` を済ませ、
+`GOOGLE_CLOUD_PROJECT` に Vertex AI を利用できるプロジェクト ID を設定してください。
+認証ファイルやトークンを台本・リポジトリに保存する必要はありません。
+音声は Gemini Enterprise API の `generateContent` に送信され、料金が発生します。
+[Google Cloud の現行 TTS 仕様](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/text-to-speech/overview)
+を参照してください。
 
 ```bash
 curl -s localhost:50021/speakers | jq -r '.[] | .name as $n | .styles[] | "\(.id)\t\($n)（\(.name)）"'

@@ -21,7 +21,7 @@ daihon <command> [flags]
 | フラグ | 既定値 | 説明 |
 |---|---|---|
 | `-f <path>` | `movie.yml` | 台本のパス |
-| `--engine <name>` | | 音声エンジンを上書きする（`voicevox` / `say` / `estimate`） |
+| `--engine <name>` | | 音声エンジンを上書きする（`voicevox` / `say` / `gemini` / `estimate`） |
 | `--scene <id>` | | 指定したシーンだけを対象にする |
 | `--no-autostart` | | VOICEVOX ENGINE を自動起動しない |
 
@@ -89,15 +89,17 @@ daihon build
 |---|---|
 | `voicevox` | VOICEVOX ENGINE（`localhost:50021`）で合成する |
 | `say` | macOS の音声サービスで合成する。声はキャラクターの `voice_name` で選ぶ |
+| `gemini` | Vertex AI の Gemini 3.8 TTS で合成する。ADC と Google Cloud のプロジェクトが必要 |
 | `estimate` | 合成せず、文字数から尺を見積もって無音を返す。エンジンなしで構成を確認するときや CI 向け |
 
 | 環境変数 | 説明 |
 |---|---|
 | `DAIHON_VOICEVOX_BIN` | ネイティブ版エンジンの実行ファイル。必要なときに自動で起動・停止する。未設定なら VOICEVOX アプリ（`/Applications/VOICEVOX.app`）に同梱のエンジンを使う |
 | `DAIHON_VOICEVOX_URL` | エンジンの URL。既定は `http://127.0.0.1:50021` |
+| `GOOGLE_CLOUD_PROJECT` | Gemini TTS に使う Google Cloud プロジェクト ID。ADC から判明する場合は省略可能 |
 
 ## キャッシュ
 
-音声は `.daihon-cache/audio/` に行単位でキャッシュされます。キーはセリフ・読み・話者・速さ・
+音声は `.daihon-cache/audio/` に行単位でキャッシュされます。キーはセリフ・読み・話者・速さ・Gemini のモデル・声・言語・スタイル・
 エンジンのバージョンなどから作るので、1行直せばその行だけ合成し直されます。
 消しても次のビルドで作り直されるだけです。

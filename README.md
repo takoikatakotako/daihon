@@ -2,7 +2,7 @@
 
 **台本を書くと、解説動画ができる。**
 
-`movie.yml` に会話を書いて `daihon build` を実行すると、VOICEVOX または macOS の `say` で音声を合成し、
+`movie.yml` に会話を書いて `daihon build` を実行すると、VOICEVOX、macOS の `say`、または Vertex AI の Gemini TTS で音声を合成し、
 立ち絵・字幕・画像を合わせた mp4 を書き出します。
 
 [![daihon の紹介動画](docs/images/introduction.jpg)](docs/introduction.mp4)

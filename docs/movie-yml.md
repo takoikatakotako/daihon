@@ -198,13 +198,17 @@ scenes:
   wait: 800         # この行の後の間（ms）。省略時は pause_between_lines_ms
   speed: 1.3        # 話す速さ。省略時はキャラの voice.speed
   read: "..."       # 音声エンジンに渡す読み。字幕には本文が出る
+  style: "明るく"    # Gemini TTS の読み上げ方。キャラの voice.style を上書き
 ```
 
 `read` は、字幕と読みを分けたいときに使います。英単語や固有名詞の読み違いを直すのが主な用途です。
 
-キャラクターの `voice.engine` は `voicevox`、macOS の `say`、または無音の `estimate` を指定できます。
+キャラクターの `voice.engine` は `voicevox`、macOS の `say`、Vertex AI の `gemini`、または無音の `estimate` を指定できます。
 `say` では `voice.voice_name` に `say -v '?'` で表示される声の名前を指定し、
 `speed` で読み上げ速度を調整します。`voice_name` を省略するとシステムの既定の声です。
+`gemini` では `voice.model`、`voice.voice_name`、`voice.language`、`voice.style` を指定できます。
+`read` はそのまま読み上げ本文になり、`style` は本文と分けて API に渡されます。
+設定例は[キャラクター](./characters.md#声)を参照してください。
 
 ```yaml
 - senpai: "まずは daihon init で雛形を作ってみよう。"

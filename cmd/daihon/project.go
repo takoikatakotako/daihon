@@ -8,6 +8,7 @@ import (
 	"github.com/takoikatakotako/daihon/internal/parser"
 	"github.com/takoikatakotako/daihon/internal/voice"
 	"github.com/takoikatakotako/daihon/internal/voice/estimate"
+	"github.com/takoikatakotako/daihon/internal/voice/gemini"
 	"github.com/takoikatakotako/daihon/internal/voice/macsay"
 	"github.com/takoikatakotako/daihon/internal/voice/voicevox"
 )
@@ -32,6 +33,7 @@ func newSynth(p *parser.Project) *voice.Synthesizer {
 		filepath.Join(p.Root, cacheDir, "audio"),
 		voicevox.New(base),
 		macsay.New(),
+		gemini.New(os.Getenv("GOOGLE_CLOUD_PROJECT")),
 		estimate.New(),
 	)
 }
