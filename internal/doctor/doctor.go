@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -51,7 +52,23 @@ func Run(ctx context.Context, voicevoxURL string) []Result {
 	out = append(out, checkEncoders(ctx)...)
 	out = append(out, checkVoicevox(ctx, voicevoxURL))
 	out = append(out, checkVoicevoxBinary())
+	out = append(out, checkMacSay())
 	return out
+}
+
+func checkMacSay() Result {
+	r := Result{Name: "macOS say", Required: false}
+	if runtime.GOOS != "darwin" {
+		r.Detail = "macOS でのみ利用できます"
+		return r
+	}
+	path, err := exec.LookPath("say")
+	if err != nil {
+		r.Detail = "見つかりません"
+		return r
+	}
+	r.OK, r.Detail = true, path
+	return r
 }
 
 var versionRe = regexp.MustCompile(`ffmpeg version (\S+)`)

@@ -21,7 +21,7 @@ daihon <command> [flags]
 | フラグ | 既定値 | 説明 |
 |---|---|---|
 | `-f <path>` | `movie.yml` | 台本のパス |
-| `--engine <name>` | | 音声エンジンを上書きする（`voicevox` / `estimate`） |
+| `--engine <name>` | | 音声エンジンを上書きする（`voicevox` / `say` / `estimate`） |
 | `--scene <id>` | | 指定したシーンだけを対象にする |
 | `--no-autostart` | | VOICEVOX ENGINE を自動起動しない |
 
@@ -88,6 +88,7 @@ daihon build
 | 名前 | 説明 |
 |---|---|
 | `voicevox` | VOICEVOX ENGINE（`localhost:50021`）で合成する |
+| `say` | macOS の音声サービスで合成する。声はキャラクターの `voice_name` で選ぶ |
 | `estimate` | 合成せず、文字数から尺を見積もって無音を返す。エンジンなしで構成を確認するときや CI 向け |
 
 | 環境変数 | 説明 |

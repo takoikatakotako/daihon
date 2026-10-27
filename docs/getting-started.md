@@ -8,7 +8,7 @@
 |---|---|---|
 | Go 1.25 以降 | daihon のビルド | `brew install go` または <https://go.dev/dl/> |
 | ffmpeg | 動画の書き出し | `brew install ffmpeg` |
-| VOICEVOX ENGINE | 音声合成 | 下を参照 |
+| VOICEVOX ENGINE または macOS `say` | 音声合成 | 下を参照 |
 
 ### daihon
 
@@ -44,6 +44,10 @@ daihon は `localhost:50021` で待ち受けている VOICEVOX ENGINE に話し�
 - **VOICEVOX アプリ**: 起動しているあいだは同じポートでエンジンが動いています。
 
 エンジンが無くても、`--engine estimate` を付ければ文字数から尺を見積もって無音で進められます。
+
+macOS では内蔵の `say` も使えます。`movie.yml` のキャラクターに
+`voice: { engine: say, voice_name: Kyoko }` を指定すれば、VOICEVOX ENGINE を起動せずに音声付きでビルドできます。
+`say` の出力を WAV に変換するため、ffmpeg は必要です。
 
 状態は `daihon doctor` で確認できます。
 

@@ -202,6 +202,10 @@ scenes:
 
 `read` は、字幕と読みを分けたいときに使います。英単語や固有名詞の読み違いを直すのが主な用途です。
 
+キャラクターの `voice.engine` は `voicevox`、macOS の `say`、または無音の `estimate` を指定できます。
+`say` では `voice.voice_name` に `say -v '?'` で表示される声の名前を指定し、
+`speed` で読み上げ速度を調整します。`voice_name` を省略するとシステムの既定の声です。
+
 ```yaml
 - senpai: "まずは daihon init で雛形を作ってみよう。"
   read: "まずは、ダイホン、イニットで雛形を作ってみよう。"

@@ -101,6 +101,7 @@ func cacheKey(engineID, version, text string, o Options) string {
 		engineID,
 		version,
 		strconv.Itoa(o.SpeakerID),
+		o.VoiceName,
 		strconv.FormatFloat(o.Speed, 'f', 4, 64),
 		strconv.FormatFloat(o.Pitch, 'f', 4, 64),
 		text,

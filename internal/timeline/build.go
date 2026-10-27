@@ -121,7 +121,7 @@ func (b *Builder) speak(ctx context.Context, subs, voices *[]Event, chars *charL
 	if b.EngineOverride != "" {
 		engine = b.EngineOverride
 	}
-	opts := voice.Options{SpeakerID: c.Voice.SpeakerID, Speed: c.Voice.Speed, Pitch: c.Voice.Pitch}
+	opts := voice.Options{SpeakerID: c.Voice.SpeakerID, VoiceName: c.Voice.VoiceName, Speed: c.Voice.Speed, Pitch: c.Voice.Pitch}
 	if it.Speed != nil {
 		opts.Speed = *it.Speed
 	}

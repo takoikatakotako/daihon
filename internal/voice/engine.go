@@ -8,6 +8,7 @@ import "context"
 // Options are the per-line synthesis parameters.
 type Options struct {
 	SpeakerID int
+	VoiceName string
 	Speed     float64
 	Pitch     float64
 }

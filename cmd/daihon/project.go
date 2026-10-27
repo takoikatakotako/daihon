@@ -8,6 +8,7 @@ import (
 	"github.com/takoikatakotako/daihon/internal/parser"
 	"github.com/takoikatakotako/daihon/internal/voice"
 	"github.com/takoikatakotako/daihon/internal/voice/estimate"
+	"github.com/takoikatakotako/daihon/internal/voice/macsay"
 	"github.com/takoikatakotako/daihon/internal/voice/voicevox"
 )
 
@@ -30,6 +31,7 @@ func newSynth(p *parser.Project) *voice.Synthesizer {
 	return voice.NewSynthesizer(
 		filepath.Join(p.Root, cacheDir, "audio"),
 		voicevox.New(base),
+		macsay.New(),
 		estimate.New(),
 	)
 }
