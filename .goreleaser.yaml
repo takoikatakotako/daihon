@@ -1,5 +1,6 @@
 # GoReleaser の設定。タグを push すると .github/workflows/release.yml から実行され、
-# 各 OS 向けのバイナリを GitHub Releases に置く。
+# 各 OS 向けのバイナリを GitHub Releases に置き、Homebrew の Cask を
+# takoikatakotako/homebrew-tap に書き込む。
 # 手元で試す:  goreleaser release --snapshot --clean
 version: 2
 
@@ -32,6 +33,32 @@ archives:
 
 checksum:
   name_template: checksums.txt
+
+# brew install takoikatakotako/tap/daihon
+homebrew_casks:
+  - name: daihon
+    directory: Casks
+    homepage: https://github.com/takoikatakotako/daihon
+    description: 台本を書くと、解説動画ができる
+    dependencies:
+      - formula: ffmpeg
+    # バイナリは署名していないので、Gatekeeper に止められないよう隔離属性を外す。
+    hooks:
+      post:
+        install_steps: |
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/daihon"]
+          end
+    repository:
+      owner: takoikatakotako
+      name: homebrew-tap
+      branch: main
+      # GITHUB_TOKEN は別リポジトリに push できないので、homebrew-tap に書ける PAT を使う。
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "daihon {{ .Tag }}"
 
 changelog:
   sort: asc

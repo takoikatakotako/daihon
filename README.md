@@ -35,26 +35,26 @@ scenes:
 
 ## クイックスタート
 
-ソースからビルドします。Go 1.25 以降が必要です。
+Homebrew で入れます。ffmpeg も一緒に入ります。
 
 ```bash
-git clone git@github.com:takoikatakotako/daihon.git
-cd daihon
-go install ./cmd/daihon       # $(go env GOPATH)/bin に入る
+brew install takoikatakotako/tap/daihon
 
-brew install ffmpeg
 docker compose up -d          # VOICEVOX ENGINE を使う場合
 
 daihon init my-video && cd my-video
 daihon build                  # out/movie.mp4 ができる
 ```
 
+Homebrew を使わない場合は、[Releases](https://github.com/takoikatakotako/daihon/releases/latest) のバイナリか、
+Go 1.25 以降があれば `go install github.com/takoikatakotako/daihon/cmd/daihon@latest` でも入ります。
 詳しくは [はじめての動画](docs/getting-started.md) を参照してください。
 
 サンプルをビルドする場合:
 
 ```bash
-cd examples/introduction
+git clone https://github.com/takoikatakotako/daihon.git
+cd daihon/examples/introduction
 daihon build                  # out/introduction.mp4
 ```
 

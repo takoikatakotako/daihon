@@ -6,19 +6,28 @@
 
 | もの | 用途 | 入れ方 |
 |---|---|---|
-| Go 1.25 以降 | daihon のビルド | `brew install go` または <https://go.dev/dl/> |
-| ffmpeg | 動画の書き出し | `brew install ffmpeg` |
+| daihon | 本体 | 下を参照 |
+| ffmpeg | 動画の書き出し | `brew install ffmpeg`（Homebrew で daihon を入れれば一緒に入る） |
 | VOICEVOX ENGINE または macOS `say` | 音声合成 | 下を参照 |
 
 ### daihon
 
-リポジトリをクローンして、ソースからビルドします。
+macOS と Linux では Homebrew で入れられます。依存する ffmpeg も一緒に入ります。
 
 ```bash
-git clone git@github.com:takoikatakotako/daihon.git
-cd daihon
-go install ./cmd/daihon
+brew install takoikatakotako/tap/daihon
 daihon version
+```
+
+更新するときは `brew upgrade daihon` を実行します。
+
+Homebrew を使わない場合は、[Releases](https://github.com/takoikatakotako/daihon/releases/latest)
+から OS に合ったアーカイブを取り、中の `daihon` を PATH の通った場所に置きます。
+
+Go 1.25 以降があれば、ソースから入れることもできます。
+
+```bash
+go install github.com/takoikatakotako/daihon/cmd/daihon@latest
 ```
 
 `go install` は `$(go env GOBIN)`（未設定なら `$(go env GOPATH)/bin`）にインストールします。
@@ -27,10 +36,6 @@ daihon version
 ```bash
 echo 'export PATH="$(go env GOPATH)/bin:$PATH"' >> ~/.zshrc
 ```
-
-インストールせずに使うなら、`go build -o daihon ./cmd/daihon` でカレントディレクトリにバイナリができます。
-
-更新するときは `git pull` してから、もう一度 `go install ./cmd/daihon` を実行します。
 
 ### VOICEVOX ENGINE
 
