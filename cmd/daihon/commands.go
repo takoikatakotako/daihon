@@ -29,7 +29,7 @@ func runCheck(args []string) error {
 	if err != nil {
 		return err
 	}
-	ds := validator.Check(p)
+	ds := validator.Check(p, c.engine)
 
 	var errs, warns int
 	for _, d := range ds {
@@ -188,18 +188,17 @@ func buildTimeline(ctx context.Context, c commonFlags) (*timeline.Timeline, *voi
 type voiceStats struct{ Hits, Misses int }
 
 func buildTimelineFor(ctx context.Context, p *parser.Project, c commonFlags) (*timeline.Timeline, *voiceStats, error) {
-	stop, err := ensureEngine(ctx, p, c.engine, !c.noAutostart)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer stop()
-
-	if ds := validator.Check(p); validator.HasErrors(ds) {
+	if ds := validator.Check(p, c.engine); validator.HasErrors(ds) {
 		for _, d := range ds {
 			fmt.Println(d)
 		}
 		return nil, nil, errCheckFailed
 	}
+	stop, err := ensureEngine(ctx, p, c.engine, !c.noAutostart)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer stop()
 
 	syn := newSynth(p)
 	b := &timeline.Builder{

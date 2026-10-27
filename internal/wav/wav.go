@@ -187,11 +187,21 @@ func sqrt(x float64) float64 {
 // timeline (and a renderable, silent video) of the right shape.
 func Silence(ms, sampleRate int) []byte {
 	samples := sampleRate * ms / 1000
-	dataLen := samples * 2
+	return wrapPCM16(make([]byte, samples*2), sampleRate)
+}
 
-	b := make([]byte, 44+dataLen)
+// PCM16 wraps mono, little-endian 16-bit samples in a standard RIFF/WAVE.
+func PCM16(samples []byte, sampleRate int) ([]byte, error) {
+	if len(samples) == 0 || len(samples)%2 != 0 || sampleRate <= 0 {
+		return nil, errors.New("wav: PCM 音声が空または不正です")
+	}
+	return wrapPCM16(samples, sampleRate), nil
+}
+
+func wrapPCM16(samples []byte, sampleRate int) []byte {
+	b := make([]byte, 44+len(samples))
 	copy(b[0:4], "RIFF")
-	binary.LittleEndian.PutUint32(b[4:8], uint32(36+dataLen))
+	binary.LittleEndian.PutUint32(b[4:8], uint32(36+len(samples)))
 	copy(b[8:12], "WAVE")
 	copy(b[12:16], "fmt ")
 	binary.LittleEndian.PutUint32(b[16:20], 16)
@@ -202,29 +212,7 @@ func Silence(ms, sampleRate int) []byte {
 	binary.LittleEndian.PutUint16(b[32:34], 2)  // block align
 	binary.LittleEndian.PutUint16(b[34:36], 16) // bits
 	copy(b[36:40], "data")
-	binary.LittleEndian.PutUint32(b[40:44], uint32(dataLen))
-	return b
-}
-
-// PCM16 wraps mono, little-endian 16-bit samples in a standard RIFF/WAVE.
-func PCM16(samples []byte, sampleRate int) ([]byte, error) {
-	if len(samples) == 0 || len(samples)%2 != 0 || sampleRate <= 0 {
-		return nil, errors.New("wav: PCM 音声が空または不正です")
-	}
-	b := make([]byte, 44+len(samples))
-	copy(b[0:4], "RIFF")
-	binary.LittleEndian.PutUint32(b[4:8], uint32(36+len(samples)))
-	copy(b[8:12], "WAVE")
-	copy(b[12:16], "fmt ")
-	binary.LittleEndian.PutUint32(b[16:20], 16)
-	binary.LittleEndian.PutUint16(b[20:22], 1)
-	binary.LittleEndian.PutUint16(b[22:24], 1)
-	binary.LittleEndian.PutUint32(b[24:28], uint32(sampleRate))
-	binary.LittleEndian.PutUint32(b[28:32], uint32(sampleRate*2))
-	binary.LittleEndian.PutUint16(b[32:34], 2)
-	binary.LittleEndian.PutUint16(b[34:36], 16)
-	copy(b[36:40], "data")
 	binary.LittleEndian.PutUint32(b[40:44], uint32(len(samples)))
 	copy(b[44:], samples)
-	return b, nil
+	return b
 }

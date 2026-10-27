@@ -8,9 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/takoikatakotako/daihon/internal/voice"
@@ -33,6 +36,9 @@ type Engine struct {
 	Endpoint    string
 	Client      *http.Client
 	TokenSource oauth2.TokenSource
+	credMu      sync.Mutex
+	project     string
+	tokens      oauth2.TokenSource
 }
 
 func New(project string) *Engine {
@@ -126,8 +132,8 @@ func (e *Engine) Synth(ctx context.Context, text string, o voice.Options) ([]byt
 		if msg == "" {
 			msg = strings.TrimSpace(string(body))
 		}
-		if len(msg) > 300 {
-			msg = msg[:300] + "…"
+		if chars := []rune(msg); len(chars) > 300 {
+			msg = string(chars[:300]) + "…"
 		}
 		return nil, fmt.Errorf("Gemini TTS API HTTP %d (%s): %s", resp.StatusCode, apiErr.Error.Status, msg)
 	}
@@ -153,17 +159,7 @@ func (e *Engine) Synth(ctx context.Context, text string, o voice.Options) ([]byt
 			if part.InlineData == nil || len(part.InlineData.Data) == 0 {
 				continue
 			}
-			if part.InlineData.MimeType != "" && !strings.HasPrefix(part.InlineData.MimeType, "audio/wav") {
-				return nil, fmt.Errorf("Gemini TTS API の音声形式 %q は未対応です（WAV を要求してください）", part.InlineData.MimeType)
-			}
-			f, err := wav.Decode(part.InlineData.Data)
-			if err != nil {
-				return nil, fmt.Errorf("Gemini TTS API の WAV が不正です: %w", err)
-			}
-			if f.Format.Channels != 1 || f.DurationMS() == 0 || !hasSignal(f.Data) {
-				return nil, errors.New("Gemini TTS API が空音声を返しました")
-			}
-			return wav.PCM16(f.Data, f.Format.SampleRate)
+			return audioToWAV(part.InlineData.Data, part.InlineData.MimeType)
 		}
 	}
 	reason := ""
@@ -174,21 +170,77 @@ func (e *Engine) Synth(ctx context.Context, text string, o voice.Options) ([]byt
 }
 
 func (e *Engine) credentials(ctx context.Context) (string, oauth2.TokenSource, error) {
-	if e.TokenSource != nil && e.Project != "" {
-		return e.Project, e.TokenSource, nil
-	}
-	creds, err := google.FindDefaultCredentials(ctx, scope)
-	if err != nil {
-		return "", nil, fmt.Errorf("Gemini TTS: Application Default Credentials を取得できません: %w", err)
+	e.credMu.Lock()
+	defer e.credMu.Unlock()
+	if e.tokens != nil {
+		return e.project, e.tokens, nil
 	}
 	project := e.Project
-	if project == "" {
-		project = creds.ProjectID
+	source := e.TokenSource
+	if source == nil {
+		creds, err := google.FindDefaultCredentials(ctx, scope)
+		if err != nil {
+			return "", nil, fmt.Errorf("Gemini TTS: Application Default Credentials を取得できません: %w", err)
+		}
+		source = creds.TokenSource
+		if project == "" {
+			project = creds.ProjectID
+		}
 	}
 	if project == "" {
 		return "", nil, errors.New("Gemini TTS: Google Cloud の project が不明です。GOOGLE_CLOUD_PROJECT を設定してください")
 	}
-	return project, creds.TokenSource, nil
+	e.project = project
+	e.tokens = oauth2.ReuseTokenSource(nil, source)
+	return e.project, e.tokens, nil
+}
+
+// Gemini 3.8 unary responses are WAV by default. Headerless L16 is also
+// accepted so a valid PCM response can be used without changing the script.
+func audioToWAV(data []byte, mimeType string) ([]byte, error) {
+	mediaType := "audio/wav"
+	params := map[string]string{}
+	if mimeType != "" {
+		var err error
+		mediaType, params, err = mime.ParseMediaType(mimeType)
+		if err != nil {
+			return nil, fmt.Errorf("Gemini TTS API の音声形式 %q が不正です: %w", mimeType, err)
+		}
+	}
+	var pcm []byte
+	switch {
+	case strings.EqualFold(mediaType, "audio/wav"), strings.EqualFold(mediaType, "audio/x-wav"):
+		f, err := wav.Decode(data)
+		if err != nil {
+			return nil, fmt.Errorf("Gemini TTS API の WAV が不正です: %w", err)
+		}
+		if f.Format.Channels != 1 {
+			return nil, fmt.Errorf("Gemini TTS API の WAV はモノラルが必要です（%d チャンネル）", f.Format.Channels)
+		}
+		if f.Format.SampleRate != 24000 {
+			return nil, fmt.Errorf("Gemini TTS API のサンプリングレートは 24000Hz が必要です（%dHz）", f.Format.SampleRate)
+		}
+		pcm = f.Data
+	case strings.EqualFold(mediaType, "audio/l16"):
+		rate, err := strconv.Atoi(params["rate"])
+		if err != nil || rate != 24000 {
+			return nil, fmt.Errorf("Gemini TTS API の L16 サンプリングレートは 24000Hz が必要です（%q）", params["rate"])
+		}
+		if codec := params["codec"]; codec != "" && !strings.EqualFold(codec, "pcm") {
+			return nil, fmt.Errorf("Gemini TTS API の L16 codec %q は未対応です", codec)
+		}
+		pcm = data
+	default:
+		return nil, fmt.Errorf("Gemini TTS API の音声形式 %q は未対応です", mimeType)
+	}
+	if len(pcm) < 48 || !hasSignal(pcm) {
+		return nil, errors.New("Gemini TTS API が空音声を返しました")
+	}
+	b, err := wav.PCM16(pcm, 24000)
+	if err != nil {
+		return nil, fmt.Errorf("Gemini TTS API の PCM が不正です: %w", err)
+	}
+	return b, nil
 }
 
 func hasSignal(data []byte) bool {

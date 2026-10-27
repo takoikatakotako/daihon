@@ -2,11 +2,15 @@ package gemini
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
+	"unicode/utf8"
 
 	"github.com/takoikatakotako/daihon/internal/voice"
 	"github.com/takoikatakotako/daihon/internal/wav"
@@ -98,6 +102,17 @@ func TestSynthReportsAPIErrorsAndEmptyAudio(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	wrongRate := testAudio(t)
+	binary.LittleEndian.PutUint32(wrongRate[24:28], 16000)
+	stereo := testAudio(t)
+	binary.LittleEndian.PutUint16(stereo[22:24], 2)
+	response := func(mimeType string, audio []byte) string {
+		b, err := json.Marshal(map[string]any{"candidates": []any{map[string]any{"content": map[string]any{"parts": []any{map[string]any{"inlineData": map[string]any{"mimeType": mimeType, "data": audio}}}}}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(b)
+	}
 	for _, tc := range []struct {
 		name   string
 		status int
@@ -108,6 +123,10 @@ func TestSynthReportsAPIErrorsAndEmptyAudio(t *testing.T) {
 		{"empty", 200, `{"candidates":[{"finishReason":"SAFETY","content":{"parts":[]}}]}`, "音声を返しません"},
 		{"invalid", 200, `{"candidates":[{"content":{"parts":[{"inlineData":{"mimeType":"audio/wav","data":"YmFk"}}]}}]}`, "WAV が不正"},
 		{"silent", 200, string(silentResponse), "空音声"},
+		{"wav rate", 200, response("audio/wav", wrongRate), "24000Hz"},
+		{"stereo", 200, response("audio/wav", stereo), "モノラル"},
+		{"pcm rate", 200, response("audio/L16;codec=pcm;rate=16000", testAudio(t)[44:]), "24000Hz"},
+		{"pcm odd bytes", 200, response("audio/L16;codec=pcm;rate=24000", testAudio(t)[44:199]), "PCM が不正"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -120,6 +139,66 @@ func TestSynthReportsAPIErrorsAndEmptyAudio(t *testing.T) {
 				t.Fatalf("error = %v", err)
 			}
 		})
+	}
+}
+
+func TestSynthWrapsRawPCM(t *testing.T) {
+	pcm := testAudio(t)[44:]
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"candidates": []any{map[string]any{"content": map[string]any{"parts": []any{map[string]any{"inlineData": map[string]any{"mimeType": "audio/L16;codec=pcm;rate=24000", "data": pcm}}}}}}})
+	}))
+	defer server.Close()
+	b, err := fakeEngine(server).Synth(context.Background(), "こんにちは", voice.Options{Speed: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := wav.Decode(b)
+	if err != nil || f.Format.SampleRate != 24000 || f.Format.Channels != 1 || string(f.Data) != string(pcm) {
+		t.Fatalf("PCM was not preserved in 24kHz mono WAV: %v, %v", f, err)
+	}
+}
+
+type countingSource struct{ calls atomic.Int32 }
+
+func (s *countingSource) Token() (*oauth2.Token, error) {
+	s.calls.Add(1)
+	return &oauth2.Token{AccessToken: "test-token", Expiry: time.Now().Add(time.Hour)}, nil
+}
+
+func TestCredentialsReuseTokenAndReportMissingProject(t *testing.T) {
+	pcm := testAudio(t)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{"candidates": []any{map[string]any{"content": map[string]any{"parts": []any{map[string]any{"inlineData": map[string]any{"mimeType": "audio/wav", "data": pcm}}}}}}})
+	}))
+	defer server.Close()
+	e := fakeEngine(server)
+	source := &countingSource{}
+	e.TokenSource = source
+	for range 2 {
+		if _, err := e.Synth(context.Background(), "こんにちは", voice.Options{Speed: 1}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := source.calls.Load(); got != 1 {
+		t.Fatalf("token requests = %d, want 1", got)
+	}
+	missing := New("")
+	missing.TokenSource = source
+	if _, _, err := missing.credentials(context.Background()); err == nil || !strings.Contains(err.Error(), "project") {
+		t.Fatalf("injected token without project: %v", err)
+	}
+}
+
+func TestAPIErrorTruncatesAtRuneBoundary(t *testing.T) {
+	message := strings.Repeat("あ", 301)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(map[string]any{"error": map[string]string{"message": message}})
+	}))
+	defer server.Close()
+	_, err := fakeEngine(server).Synth(context.Background(), "こんにちは", voice.Options{Speed: 1})
+	if err == nil || !utf8.ValidString(err.Error()) || !strings.Contains(err.Error(), strings.Repeat("あ", 300)+"…") {
+		t.Fatalf("rune truncation: %v", err)
 	}
 }
 

@@ -97,6 +97,22 @@ func TestLineWaitOverridesDefaultPause(t *testing.T) {
 	}
 }
 
+func TestStyleDoesNotInvalidateNonGeminiAudio(t *testing.T) {
+	b := newBuilder(t, &schema.Movie{
+		Characters: twoCast(),
+		Scenes: []schema.Scene{{ID: "s", Script: []schema.ScriptItem{
+			{Kind: schema.KindLine, Speaker: "a", Text: "同じセリフ", Style: "明るく"},
+			{Kind: schema.KindLine, Speaker: "a", Text: "同じセリフ", Style: "静かに"},
+		}}},
+	})
+	if _, err := b.Build(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if b.Synth.Misses != 1 || b.Synth.Hits != 1 {
+		t.Fatalf("style changed estimate cache: hits=%d misses=%d", b.Synth.Hits, b.Synth.Misses)
+	}
+}
+
 // Every character must be covered by exactly one event at any instant, so the
 // renderer never has to ask what someone is doing right now.
 func TestCharacterTrackIsContiguous(t *testing.T) {

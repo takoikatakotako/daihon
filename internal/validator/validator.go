@@ -45,8 +45,8 @@ func (d Diag) String() string {
 // lines read badly and overflow the subtitle box; this is advice, not an error.
 const LongLineRunes = 60
 
-// Check validates a loaded project.
-func Check(p *parser.Project) []Diag {
+// Check validates a loaded project for the engine that will actually be used.
+func Check(p *parser.Project, engineOverride string) []Diag {
 	var ds []Diag
 	m := p.Movie
 
@@ -57,14 +57,14 @@ func Check(p *parser.Project) []Diag {
 		ds = append(ds, Diag{Severity: Error, Message: "scenes が空です"})
 	}
 
-	ds = append(ds, checkCharacters(p)...)
+	ds = append(ds, checkCharacters(p, engineOverride)...)
 	ds = append(ds, checkFonts(p)...)
 	ds = append(ds, checkBackground(p, m.Video.Background, "", "video.background")...)
 	ds = append(ds, checkExport(m)...)
 	if m.Audio.BGM != nil {
 		ds = append(ds, checkAsset(p, m.Audio.BGM.Src, 0, "", "audio.bgm.src")...)
 	}
-	ds = append(ds, checkScenes(p)...)
+	ds = append(ds, checkScenes(p, engineOverride)...)
 
 	sort.SliceStable(ds, func(i, j int) bool { return rank(ds[i].Severity) < rank(ds[j].Severity) })
 	return ds
@@ -101,14 +101,15 @@ func rank(s Severity) int {
 	}
 }
 
-func checkCharacters(p *parser.Project) []Diag {
+func checkCharacters(p *parser.Project, engineOverride string) []Diag {
 	var ds []Diag
 	if len(p.Movie.Characters) == 0 {
 		ds = append(ds, Diag{Severity: Error, Message: "characters が空です（imports で読み込むか movie.yml に直接定義してください）"})
 	}
 	for _, id := range sortedKeys(p.Movie.Characters) {
 		c := p.Movie.Characters[id]
-		switch c.Voice.Engine {
+		engine := effectiveEngine(c.Voice.Engine, engineOverride)
+		switch engine {
 		case "voicevox", "say", "estimate":
 		case "gemini":
 			if c.Voice.Model != "" && c.Voice.Model != "gemini-3.8-flash-tts" && c.Voice.Model != "gemini-3.8-flash-lite-tts" {
@@ -118,7 +119,10 @@ func checkCharacters(p *parser.Project) []Diag {
 				ds = append(ds, Diag{Severity: Error, Message: fmt.Sprintf("%s.voice: Gemini TTS は speed/pitch に対応していません。style で指定してください", id)})
 			}
 		default:
-			ds = append(ds, Diag{Severity: Error, Message: fmt.Sprintf("%s.voice.engine: 未知の音声エンジン %q です", id, c.Voice.Engine)})
+			ds = append(ds, Diag{Severity: Error, Message: fmt.Sprintf("%s.voice.engine: 未知の音声エンジン %q です", id, engine)})
+		}
+		if engine != "gemini" && c.Voice.Style != "" {
+			ds = append(ds, Diag{Severity: Warn, Message: fmt.Sprintf("%s.voice.style: %s では使われません", id, engine)})
 		}
 		if schema.IsReserved(id) {
 			ds = append(ds, Diag{Severity: Error, Message: fmt.Sprintf("キャラクター ID %q は予約語です", id)})
@@ -162,7 +166,7 @@ func checkFonts(p *parser.Project) []Diag {
 	return ds
 }
 
-func checkScenes(p *parser.Project) []Diag {
+func checkScenes(p *parser.Project, engineOverride string) []Diag {
 	var ds []Diag
 	seenScene := map[string]bool{}
 
@@ -180,7 +184,7 @@ func checkScenes(p *parser.Project) []Diag {
 		for _, it := range sc.Script {
 			switch it.Kind {
 			case schema.KindLine:
-				ds = append(ds, checkLine(p, sc, it)...)
+				ds = append(ds, checkLine(p, sc, it, engineOverride)...)
 			case schema.KindShow:
 				if it.Src == "" {
 					ds = append(ds, Diag{Severity: Error, Line: it.Line, Scene: sc.ID, Message: "show にパスがありません"})
@@ -225,7 +229,7 @@ func checkScenes(p *parser.Project) []Diag {
 	return ds
 }
 
-func checkLine(p *parser.Project, sc schema.Scene, it schema.ScriptItem) []Diag {
+func checkLine(p *parser.Project, sc schema.Scene, it schema.ScriptItem, engineOverride string) []Diag {
 	var ds []Diag
 	c, ok := p.Movie.Characters[it.Speaker]
 	if !ok {
@@ -243,9 +247,14 @@ func checkLine(p *parser.Project, sc schema.Scene, it schema.ScriptItem) []Diag 
 		ds = append(ds, Diag{Severity: Warn, Line: it.Line, Scene: sc.ID,
 			Message: "read が text と同一です。不要なら削除してください"})
 	}
-	if c.Voice.Engine == "gemini" && it.Speed != nil && *it.Speed != 1 {
+	engine := effectiveEngine(c.Voice.Engine, engineOverride)
+	if engine == "gemini" && it.Speed != nil && *it.Speed != 1 {
 		ds = append(ds, Diag{Severity: Error, Line: it.Line, Scene: sc.ID,
 			Message: "Gemini TTS は speed に対応していません。style で指定してください"})
+	}
+	if engine != "gemini" && it.Style != "" {
+		ds = append(ds, Diag{Severity: Warn, Line: it.Line, Scene: sc.ID,
+			Message: fmt.Sprintf("style は %s では使われません", engine)})
 	}
 	if it.Expr != "" && len(c.Expressions) > 0 {
 		if _, ok := c.Expressions[it.Expr]; !ok {
@@ -254,6 +263,13 @@ func checkLine(p *parser.Project, sc schema.Scene, it schema.ScriptItem) []Diag 
 		}
 	}
 	return ds
+}
+
+func effectiveEngine(configured, override string) string {
+	if override != "" {
+		return override
+	}
+	return configured
 }
 
 // checkAsset reports a missing file as a warning, not an error: a missing asset

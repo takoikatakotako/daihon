@@ -64,3 +64,31 @@ scenes:
 		t.Fatalf("build output: %v, %v", info, err)
 	}
 }
+
+func TestGeminiOverrideValidatesBeforeSynthesis(t *testing.T) {
+	file := filepath.Join(t.TempDir(), "movie.yml")
+	content := `version: 1
+subtitle: { mode: none }
+characters:
+  narrator:
+    name: narrator
+    voice: { engine: voicevox, speaker_id: 1, speed: 1.1 }
+    stand: { position: none }
+scenes:
+  - id: intro
+    script:
+      - narrator: "こんにちは。"
+`
+	if err := os.WriteFile(file, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := runCheck([]string{"-f", file, "--engine", "gemini"}); err != errCheckFailed {
+		t.Fatalf("check: got %v, want validation error", err)
+	}
+	if err := runVoice(context.Background(), []string{"-f", file, "--engine", "gemini"}); err != errCheckFailed {
+		t.Fatalf("voice: got %v, want validation before API call", err)
+	}
+	if _, err := os.Stat(filepath.Join(filepath.Dir(file), cacheDir)); !os.IsNotExist(err) {
+		t.Fatalf("audio cache created before validation: %v", err)
+	}
+}

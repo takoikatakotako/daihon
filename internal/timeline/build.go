@@ -121,13 +121,15 @@ func (b *Builder) speak(ctx context.Context, subs, voices *[]Event, chars *charL
 	if b.EngineOverride != "" {
 		engine = b.EngineOverride
 	}
-	opts := voice.Options{SpeakerID: c.Voice.SpeakerID, VoiceName: c.Voice.VoiceName, Speed: c.Voice.Speed, Pitch: c.Voice.Pitch,
-		Model: c.Voice.Model, Language: c.Voice.Language, Style: c.Voice.Style}
+	opts := voice.Options{SpeakerID: c.Voice.SpeakerID, VoiceName: c.Voice.VoiceName, Speed: c.Voice.Speed, Pitch: c.Voice.Pitch}
 	if it.Speed != nil {
 		opts.Speed = *it.Speed
 	}
-	if it.Style != "" {
-		opts.Style = it.Style
+	if engine == "gemini" {
+		opts.Model, opts.Language, opts.Style = c.Voice.Model, c.Voice.Language, c.Voice.Style
+		if it.Style != "" {
+			opts.Style = it.Style
+		}
 	}
 
 	// The engine reads Read when given; the subtitle always shows Text.
