@@ -812,8 +812,12 @@ CRF を上げても縮みが鈍くなるのは、音声が占める割合が大�
 `go install` だけだと、使う人に Go を入れてもらう必要がある。daihon は cgo を使わない
 単一バイナリなので、GoReleaser で各 OS 向けにクロスビルドして GitHub Releases に置く。
 `v*` タグの push で `.github/workflows/release.yml` が走る。
-ただしリポジトリが非公開のあいだは、ドキュメント上の導入手順はクローンして
-`go install ./cmd/daihon` とし、Releases には触れない。公開したら手順を差し替える。バージョンは
+同じリリースで Homebrew の Cask を `takoikatakotako/homebrew-tap` に書き込み、
+`brew install takoikatakotako/tap/daihon` で入るようにする。Formula ではなく Cask にしたのは、
+GoReleaser が Formula の生成を非推奨にしたため。Cask は ffmpeg を Formula として依存に持てる。
+バイナリは署名していないので、Cask のインストール後に隔離属性を外して Gatekeeper に止められないようにする。
+別リポジトリへの push には `GITHUB_TOKEN` が使えないので、homebrew-tap に書ける PAT を
+`HOMEBREW_TAP_GITHUB_TOKEN` シークレットに置く。バージョンは
 `-X main.version` で埋め込む。埋め込みが無いときは Go が記録したバージョンを使う。
 `go install ...@v0.1.0` ならそのタグ、クローンしたソースからのビルドなら
 `v0.0.0-20261009035158-76746fb73b3a` のようにコミットを含む疑似バージョンになる。
