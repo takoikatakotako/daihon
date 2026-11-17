@@ -150,6 +150,9 @@ daihon build
 ファイルを小さくしたいときは `movie.yml` に `export` を書きます
 （[リファレンス](./movie-yml.md#export)）。
 
+ロゴやアプリアイコンを動画の最初から最後まで同じ位置に出したいときは、
+`video.overlays` に画像と位置を書きます（[リファレンス](./movie-yml.md#overlays)）。
+
 使った音声や素材のクレジットは `meta.credit` に書くと、動画の最後に表示されます。
 VOICEVOX は話者ごとに「VOICEVOX:ずんだもん」のような表記が必要です。
 
