@@ -28,6 +28,23 @@ type Video struct {
 	Height     int        `yaml:"height"`
 	FPS        int        `yaml:"fps"`
 	Background Background `yaml:"background"`
+	Overlays   []Overlay  `yaml:"overlays"`
+}
+
+// Overlay is a still image pinned to the same place for the whole movie: an
+// app icon or a logo. It is placed in layout coordinates (video.width/height,
+// origin top-left) and drawn in front of everything except subtitles, so it is
+// neither dimmed nor blurred with the background. A logo baked into each
+// background would have to be regenerated whenever it moves; this does not.
+//
+//	overlays:
+//	  - { src: assets/app-icon.png, x: 74, y: 80, width: 116, height: 116 }
+type Overlay struct {
+	Src    string `yaml:"src"`
+	X      int    `yaml:"x"`
+	Y      int    `yaml:"y"`
+	Width  int    `yaml:"width"`
+	Height int    `yaml:"height"`
 }
 
 // Export controls the encoded file, not the layout.

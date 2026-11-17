@@ -38,6 +38,9 @@ type composer struct {
 
 	// mouths caches each scaled mouth overlay by asset path.
 	mouths map[string]*image.RGBA
+
+	// overlays is video.overlays drawn once; it never changes during a movie.
+	overlays *image.RGBA
 }
 
 func (c *composer) frame(t int) *image.RGBA {
@@ -56,6 +59,7 @@ func (c *composer) frame(t int) *image.RGBA {
 	copy(img.Pix, c.static.Pix)
 
 	c.drawMouths(img, t)
+	c.drawOverlays(img)
 	c.drawSubtitle(img, t)
 	return img
 }
@@ -243,6 +247,31 @@ func (c *composer) drawMouth(img *image.RGBA, ch *schema.Character, path string)
 	if layer != nil {
 		draw.Draw(img, img.Bounds(), layer, image.Point{}, draw.Over)
 	}
+}
+
+// drawOverlays draws video.overlays: fixed images such as a logo. They go in
+// front of the background, diagrams and figures (mouths included, or a figure
+// walking under the logo would poke its mouth through it) but behind the
+// subtitle, which must stay readable. The layer is the same on every frame, so
+// it is scaled once.
+func (c *composer) drawOverlays(img *image.RGBA) {
+	ovs := c.project.Movie.Video.Overlays
+	if len(ovs) == 0 {
+		return
+	}
+	if c.overlays == nil {
+		layer := image.NewRGBA(image.Rect(0, 0, c.w, c.h))
+		for _, o := range ovs {
+			r := c.scaleRect(&timeline.Rect{X: o.X, Y: o.Y, W: o.Width, H: o.Height})
+			if src := c.assets.load(o.Src); src != nil {
+				drawContain(layer, src, r)
+			} else {
+				draw.Draw(layer, r, placeholderImage(r.Dx(), r.Dy(), o.Src, c.small), image.Point{}, draw.Over)
+			}
+		}
+		c.overlays = layer
+	}
+	draw.Draw(img, img.Bounds(), c.overlays, image.Point{}, draw.Over)
 }
 
 func (c *composer) drawSubtitle(img *image.RGBA, t int) {

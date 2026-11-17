@@ -60,6 +60,7 @@ func Check(p *parser.Project, engineOverride string) []Diag {
 	ds = append(ds, checkCharacters(p, engineOverride)...)
 	ds = append(ds, checkFonts(p)...)
 	ds = append(ds, checkBackground(p, m.Video.Background, "", "video.background")...)
+	ds = append(ds, checkOverlays(p)...)
 	ds = append(ds, checkExport(m)...)
 	if m.Audio.BGM != nil {
 		ds = append(ds, checkAsset(p, m.Audio.BGM.Src, 0, "", "audio.bgm.src")...)
@@ -86,6 +87,32 @@ func checkExport(m *schema.Movie) []Diag {
 	}
 	if e.AudioBitrate != "" && !audioBitrate.MatchString(e.AudioBitrate) {
 		ds = append(ds, Diag{Severity: Error, Message: fmt.Sprintf("export.audio_bitrate は 64k のように書いてください (got %q)", e.AudioBitrate)})
+	}
+	return ds
+}
+
+func checkOverlays(p *parser.Project) []Diag {
+	var ds []Diag
+	v := p.Movie.Video
+	for i, o := range v.Overlays {
+		field := fmt.Sprintf("video.overlays[%d]", i)
+		if o.Src == "" {
+			ds = append(ds, Diag{Severity: Error, Message: field + ".src がありません"})
+		}
+		ds = append(ds, checkAsset(p, o.Src, 0, "", field+".src")...)
+		if o.Width <= 0 || o.Height <= 0 {
+			ds = append(ds, Diag{Severity: Error,
+				Message: fmt.Sprintf("%s の width と height は正の数で指定してください (got %dx%d)", field, o.Width, o.Height)})
+			continue
+		}
+		switch {
+		case o.X >= v.Width || o.Y >= v.Height || o.X+o.Width <= 0 || o.Y+o.Height <= 0:
+			ds = append(ds, Diag{Severity: Error,
+				Message: fmt.Sprintf("%s が画面 (%dx%d) の外にあります (x=%d, y=%d, %dx%d)", field, v.Width, v.Height, o.X, o.Y, o.Width, o.Height)})
+		case o.X < 0 || o.Y < 0 || o.X+o.Width > v.Width || o.Y+o.Height > v.Height:
+			ds = append(ds, Diag{Severity: Warn,
+				Message: fmt.Sprintf("%s が画面 (%dx%d) からはみ出しています (x=%d, y=%d, %dx%d)", field, v.Width, v.Height, o.X, o.Y, o.Width, o.Height)})
+		}
 	}
 	return ds
 }
